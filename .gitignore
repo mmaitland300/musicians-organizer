@@ -80,3 +80,6 @@ venv.bak/
 !.vscode/tasks.json
 !.vscode/launch.json
 !.vscode
+
+# Local review-tool project plans
+*.project.json
