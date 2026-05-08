@@ -1,4 +1,4 @@
-"""Capture README screenshots from real Qt widgets with generated demo data."""
+"""Capture safe fixture screenshots from real Qt widgets with demo data."""
 
 from __future__ import annotations
 
@@ -26,7 +26,7 @@ from ui.dialogs.feature_view_dialog import FeatureViewDialog  # noqa: E402
 from ui.dialogs.spectrogram_dialog import SpectrogramDialog  # noqa: E402
 from ui.main_window import MainWindow  # noqa: E402
 
-OUTPUT_DIR = Path("docs/readme")
+OUTPUT_DIR = Path("docs/readme/generated")
 SAMPLE_RATE = 44_100
 
 
@@ -141,7 +141,7 @@ def main() -> int:
         db_manager = DatabaseManager(engine=engine)
 
         window = MainWindow(db_manager=db_manager)
-        window.setTheme("light", save=False)
+        window.setTheme("dark", save=False)
         window.resize(1280, 820)
         window.onScanFinished(records)
         if window.txtFilter is not None:
@@ -175,7 +175,7 @@ def main() -> int:
         feature_dialog.resize(560, 620)
         _save_widget(app, feature_dialog, OUTPUT_DIR / "feature-details.png")
 
-        spectrogram_dialog = SpectrogramDialog(records[0]["path"], theme="light")
+        spectrogram_dialog = SpectrogramDialog(records[0]["path"], theme="dark")
         spectrogram_dialog.resize(920, 560)
         _save_widget(app, spectrogram_dialog, OUTPUT_DIR / "spectrogram-view.png")
 

@@ -40,17 +40,20 @@ and cleaning the library over time.
 
 ## Visual Walkthrough
 
-The screenshots below are generated from local demo fixtures, not from a private
-sample library. They show the main workflows reviewers should understand quickly:
-library filtering, duplicate review, feature inspection, and spectrogram preview.
+These dark-mode screenshots show the main reviewer-facing workflows:
+library filtering, duplicate review, feature inspection, spectrogram preview,
+and waveform preview. Media files stay local; the repository includes only the
+screenshots and workflow documentation.
 
-| Library filtering | Duplicate review |
-| --- | --- |
-| ![Library filtering view](docs/readme/library-view.png) | ![Duplicate manager view](docs/readme/duplicate-manager.png) |
+![Library filtering view](docs/readme/library-view.png)
 
-| Feature inspection | Spectrogram preview |
+| Duplicate review | Feature inspection |
 | --- | --- |
-| ![Feature details dialog](docs/readme/feature-details.png) | ![Spectrogram preview dialog](docs/readme/spectrogram-view.png) |
+| ![Duplicate manager view](docs/readme/duplicate-manager.png) | ![Feature details dialog](docs/readme/feature-details.png) |
+
+| Spectrogram preview | Waveform preview |
+| --- | --- |
+| ![Spectrogram preview dialog](docs/readme/spectrogram-view.png) | ![Waveform preview dialog](docs/readme/waveform-view.png) |
 
 ## Quick Start (Deterministic Path)
 
