@@ -38,6 +38,23 @@ and cleaning the library over time.
   own library
 - "Send to Cubase" integration is narrow by design and not a general DAW bridge
 
+## Visual Walkthrough
+
+These dark-mode screenshots show the main reviewer-facing workflows:
+library filtering, duplicate review, feature inspection, spectrogram preview,
+and waveform preview. Media files stay local; the repository includes only the
+screenshots and workflow documentation.
+
+![Library filtering view](docs/readme/library-view.png)
+
+| Duplicate review | Feature inspection |
+| --- | --- |
+| ![Duplicate manager view](docs/readme/duplicate-manager.png) | ![Feature details dialog](docs/readme/feature-details.png) |
+
+| Spectrogram preview | Waveform preview |
+| --- | --- |
+| ![Spectrogram preview dialog](docs/readme/spectrogram-view.png) | ![Waveform preview dialog](docs/readme/waveform-view.png) |
+
 ## Quick Start (Deterministic Path)
 
 Target runtime is Python 3.11. CI currently exercises Python 3.10 and 3.11.
@@ -137,6 +154,7 @@ Main runtime path:
 
 ## Workflow Evidence
 
+- Visual README assets: [`docs/readme/`](docs/readme/)
 - Concrete walkthrough artifact: [`docs/workflow-walkthrough.md`](docs/workflow-walkthrough.md)
 - The walkthrough captures a full operational loop (scan -> dedupe -> analyze ->
   filter/tag -> similar search) with expected outcomes and optional DB checks.
