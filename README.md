@@ -62,8 +62,8 @@ Target runtime is Python 3.11. CI currently exercises Python 3.10 and 3.11.
 1) Clone and enter the repository:
 
 ```bash
-git clone https://github.com/mmaitland300/organizer_project.git
-cd organizer_project
+git clone https://github.com/mmaitland300/musicians-organizer.git
+cd musicians-organizer
 ```
 
 2) Create and activate a virtual environment:
@@ -189,7 +189,7 @@ Main runtime path:
 ## Project Structure
 
 ```text
-organizer_project/
+musicians-organizer/
 |-- main.py
 |-- config/
 |-- models/
