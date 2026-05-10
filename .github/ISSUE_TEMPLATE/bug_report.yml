@@ -1,0 +1,60 @@
+name: Bug report
+description: Report a reproducible problem with Musicians Organizer.
+title: "[Bug]: "
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for helping improve Musicians Organizer. Please avoid attaching private audio files or screenshots that expose sensitive local paths.
+  - type: input
+    id: os
+    attributes:
+      label: Operating system
+      description: Include version when possible.
+      placeholder: "Windows 11, macOS 14, Ubuntu 24.04"
+    validations:
+      required: true
+  - type: input
+    id: python
+    attributes:
+      label: Python version
+      placeholder: "3.11.4"
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      description: List the smallest workflow that triggers the issue.
+      placeholder: |
+        1. Select folder...
+        2. Click...
+        3. Observe...
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behavior
+    validations:
+      required: true
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual behavior
+      description: Include traceback or log snippets if available.
+    validations:
+      required: true
+  - type: textarea
+    id: context
+    attributes:
+      label: Additional context
+      description: Mention library size, file types, DB path override, or manual checks if relevant.
+  - type: checkboxes
+    id: privacy
+    attributes:
+      label: Privacy check
+      options:
+        - label: I removed private media names, private file paths, and secrets from this report.
+          required: true

@@ -189,6 +189,13 @@ Main runtime path:
 - Additional workflow-oriented tagging improvements
 - Better cross-DAW export/integration primitives (currently Cubase-specific path)
 
+## Community and Project Notes
+
+- License: [MIT](LICENSE)
+- Contributions: [CONTRIBUTING.md](CONTRIBUTING.md)
+- Security reporting: [SECURITY.md](SECURITY.md)
+- Roadmap: [ROADMAP.md](ROADMAP.md)
+
 ## Project Structure
 
 ```text
