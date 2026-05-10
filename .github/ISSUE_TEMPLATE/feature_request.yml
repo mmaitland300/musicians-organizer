@@ -1,0 +1,54 @@
+name: Feature request
+description: Suggest a focused improvement to the local desktop workflow.
+title: "[Feature]: "
+labels: ["enhancement"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Musicians Organizer is intentionally local-first. The most useful requests are specific workflow improvements for scanning, filtering, tagging, duplicate review, analysis, or safe DAW handoff.
+  - type: textarea
+    id: problem
+    attributes:
+      label: Workflow problem
+      description: What gets hard or repetitive in the current app?
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed improvement
+      description: Describe the smallest useful change.
+    validations:
+      required: true
+  - type: dropdown
+    id: area
+    attributes:
+      label: Area
+      options:
+        - Scanning and library sync
+        - Filtering and search
+        - Tags and metadata
+        - Duplicate review
+        - Waveform or spectrogram preview
+        - Similarity recommendations
+        - Cubase workflow
+        - Packaging or setup
+        - Documentation
+        - Other
+    validations:
+      required: true
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered
+      description: Optional, but helpful if there is a simpler path.
+  - type: checkboxes
+    id: scope
+    attributes:
+      label: Scope check
+      options:
+        - label: This request keeps user media local.
+          required: true
+        - label: This request does not require uploading private audio files or library metadata.
+          required: true
