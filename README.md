@@ -94,6 +94,9 @@ python -m pip install -r requirements-dev.txt
 
 Installs use **pip and the requirement files only** (same as CI). `pyproject.toml`
 holds Black and isort settings; it is not a second install manifest or lockfile.
+`requirements.txt` is the runtime app set. `requirements-dev.txt` is limited to
+formatting, linting, type-checking, and test tools. `constraints.txt` preserves
+known-good transitive pins without mixing them into the direct dependency lists.
 
 4) Run the app:
 
@@ -200,5 +203,6 @@ musicians-organizer/
 |-- tests/
 |-- requirements.txt
 |-- requirements-dev.txt
+|-- constraints.txt
 `-- .github/workflows/ci.yml
 ```
