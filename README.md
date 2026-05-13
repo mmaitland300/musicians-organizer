@@ -8,42 +8,36 @@ This project exists because once a sample library grows, folder names alone stop
 being enough. You need a repeatable workflow for finding files, tracking metadata,
 and cleaning the library over time.
 
-## Who this is for
+## Quick Review Path
 
-- Music producers and sound designers with large local sample libraries
-- People who want local, inspectable workflows over cloud cataloging tools
-- Users comfortable with Python + desktop tooling tradeoffs
+- Start with the [Visual Walkthrough](#visual-walkthrough) for the current UI.
+- Run the app with the [Quick Start](#quick-start-deterministic-path) if you have Python 3.11 available.
+- Read the [workflow walkthrough](docs/workflow-walkthrough.md) for the scan -> dedupe -> analyze -> filter/tag -> similar-search loop.
+- Check [Tradeoffs and Limitations](#tradeoffs-and-limitations) before relying on auto-tagging or similarity results.
 
-## Current Status
+## What It Is
 
-### Working now
+- Local-first desktop app for music producers and sound designers with large sample libraries.
+- SQLite-backed file library with scanning, filtering, tagging, duplicate review, and feature inspection.
+- Practical alternative to cloud cataloging when the media files should stay on your machine.
+- Python/PyQt project with desktop-tooling tradeoffs, not a packaged consumer release yet.
 
-- Recursive folder scanning with metadata extraction
-- SQLite-backed persistence (SQLAlchemy Core) with Alembic migrations
-- Filtering by filename, musical key, BPM, tags, used status, and several
-  extracted audio features
-- Duplicate detection using size + MD5 hash checks
-- Advanced feature extraction in background workers (including MFCC set and
-  additional descriptors)
-- Similarity recommendations based on stored features
-- Waveform/spectrogram dialogs and in-app preview controls
-- Multi-dimensional tagging support (for example `instrument:KICK`)
+## Status Snapshot
 
-### Partial or rough edges
+- Working now: recursive scanning, SQLite persistence, filtering, duplicate detection, background analysis, waveform/spectrogram previews, similarity recommendations, and multi-dimensional tags such as `instrument:KICK`.
+- Target runtime is Python 3.11; CI currently exercises Python 3.10 and 3.11.
+- Setup can be sensitive to PyQt5, audio, plotting, and scientific-package differences across systems.
+- Auto-tagging is heuristic. Similarity quality depends on feature coverage and distribution in the user's own library.
+- "Send to Cubase" is intentionally narrow and should not be read as a general DAW bridge.
 
-- Heavy dependency stack (PyQt5 + audio/scientific packages) can make setup
-  and packaging fragile on some systems
-- Auto-tagging is heuristic, not deterministic ground truth
-- Similarity quality depends on feature completeness and distribution in your
-  own library
-- "Send to Cubase" integration is narrow by design and not a general DAW bridge
+For planned cleanup, packaging, and lint work, see [ROADMAP.md](ROADMAP.md).
 
 ## Visual Walkthrough
 
-These dark-mode screenshots show the main reviewer-facing workflows:
-library filtering, duplicate review, feature inspection, spectrogram preview,
-and waveform preview. Media files stay local; the repository includes only the
-screenshots and workflow documentation.
+These dark-mode screenshots show the main workflows: library filtering,
+duplicate review, feature inspection, spectrogram preview, and waveform preview.
+Media files stay local; the repository includes only screenshots and workflow
+documentation.
 
 ![Library filtering view](docs/readme/library-view.png)
 
@@ -155,11 +149,11 @@ Main runtime path:
 - `services/database_manager.py` manages upsert/query/statistics/similarity logic
 - `services/schema.py` + `migrations/` define schema and migrations
 
-## Workflow Evidence
+## Supporting Workflow Docs
 
 - Visual README assets: [`docs/readme/`](docs/readme/)
 - Concrete walkthrough artifact: [`docs/workflow-walkthrough.md`](docs/workflow-walkthrough.md)
-- The walkthrough captures a full operational loop (scan -> dedupe -> analyze ->
+- The walkthrough captures a full desktop workflow (scan -> dedupe -> analyze ->
   filter/tag -> similar search) with expected outcomes and optional DB checks.
 
 ## Tradeoffs and Limitations
