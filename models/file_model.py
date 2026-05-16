@@ -3,7 +3,7 @@
 File models for Musicians Organizer.
 
 This module defines:
-- FileTableModel: Represents file metadata for the main table view (standard columns only).
+- FileTableModel: Represents file metadata for the main table view.
 - FileFilterProxyModel: Provides advanced filtering capabilities, including new features
   and advanced text search.
 """
@@ -161,10 +161,10 @@ class FileTableModel(QtCore.QAbstractTableModel):
                 return str(file_info.get("channels", ""))
             if header == "Tags":
                 tags_data = file_info.get("tags", {})
-                # Ensure consistency: if tags are somehow stored as a list, wrap in 'general'
+                # Ensure consistency if tags are somehow stored as a list.
                 if isinstance(tags_data, list):
                     tags_data = {"general": tags_data}
-                # Handle cases where tags might not be a dict (though DB save should ensure dict)
+                # DB saves should ensure dicts, but keep display defensive.
                 if not isinstance(tags_data, dict):
                     return ""
                 return format_multi_dim_tags(tags_data)
@@ -172,7 +172,9 @@ class FileTableModel(QtCore.QAbstractTableModel):
             # No need to handle new features here as they are not columns
 
             logger.warning(
-                f"Unhandled standard column in DisplayRole: col={col}, header='{header}'"
+                "Unhandled standard column in DisplayRole: col=%s, header=%r",
+                col,
+                header,
             )
             return ""  # Fallback
 
@@ -321,18 +323,23 @@ class FileTableModel(QtCore.QAbstractTableModel):
             if needs_db_save:
                 if not self._db_manager:  # Check if db_manager exists
                     logger.error(
-                        "Cannot save changes: DatabaseManager not available in FileTableModel."
+                        "Cannot save changes: DatabaseManager not available "
+                        "in FileTableModel."
                     )
                     return False
                 try:
                     self._db_manager.save_file_record(file_info)
                     logger.debug(
-                        f"Saved changes for {file_info.get('path')} after edit (Column: {self.COLUMN_HEADERS[col]})."
+                        "Saved changes for %s after edit (Column: %s).",
+                        file_info.get("path"),
+                        self.COLUMN_HEADERS[col],
                     )
                     return True
                 except Exception as e:
                     logger.error(
-                        f"Failed to save record after edit for {file_info.get('path')}: {e}",
+                        "Failed to save record after edit for %s: %s",
+                        file_info.get("path"),
+                        e,
                         exc_info=True,
                     )
                     return False  # Indicate save failure
@@ -403,7 +410,7 @@ class FileFilterProxyModel(QtCore.QSortFilterProxyModel):
     # Regex to find terms, respecting quotes, field specifiers, and operators
     _QUERY_TOKEN_RE = re.compile(
         r'"([^"]*)"|'  # 1: Quoted string
-        r"(\b(?:AND|OR|NOT)\b)|"  # 2: Boolean Operators (case-insensitive due to logic later)
+        r"(\b(?:AND|OR|NOT)\b)|"  # 2: Boolean operators
         r'([a-zA-Z_]+):"([^"]*)"|'  # 3, 4: field:"quoted value"
         r"([a-zA-Z_]+):(\S+)|"  # 5, 6: field:value (non-space)
         r"(\S+)",  # 7: Default term (non-space)
@@ -446,7 +453,8 @@ class FileFilterProxyModel(QtCore.QSortFilterProxyModel):
     ) -> Optional[List[Dict[str, Any]]]:
         """
         Parses the advanced query string into a structured list of conditions.
-        Example Output: [{'term': 'kick', 'fields': ['name','tag'], 'negated': False, 'op': 'AND'}, ...]
+        Example output:
+        [{'term': 'kick', 'fields': ['name', 'tag'], 'negated': False}]
         Returns None if query is empty or invalid.
         """
         if not query_string or not query_string.strip():
@@ -464,8 +472,10 @@ class FileFilterProxyModel(QtCore.QSortFilterProxyModel):
                 match.start() > last_pos
                 and query_string[last_pos : match.start()].strip()
             ):
+                invalid_syntax = query_string[last_pos : match.start()].strip()
                 logger.warning(
-                    f"Ignoring potentially invalid syntax between tokens: '{query_string[last_pos:match.start()].strip()}'"
+                    "Ignoring potentially invalid syntax between tokens: %r",
+                    invalid_syntax,
                 )
             last_pos = match.end()
 
@@ -477,16 +487,16 @@ class FileFilterProxyModel(QtCore.QSortFilterProxyModel):
             if operator:
                 op_upper = operator.upper()
                 if op_upper == "NOT":
-                    # Apply negation only if it's not already negated (avoid double negatives)
+                    # Apply negation only if it is not already negated.
                     if not current_negated:
                         current_negated = True
                     else:
                         logger.debug("Ignoring consecutive 'NOT' operators.")
-                    # 'NOT' applies to the *next* term, doesn't change AND/OR relationship
+                    # 'NOT' applies to the next term.
                     continue  # Move to next token
                 elif op_upper in ["AND", "OR"]:
                     # Set the operator for the *next* term, only if a term follows
-                    # We peek ahead slightly implicitly by checking if a term is added later
+                    # We check whether a term is added later.
                     current_op = op_upper
                     current_negated = False  # AND/OR resets negation
                     continue  # Move to next token
@@ -576,7 +586,9 @@ class FileFilterProxyModel(QtCore.QSortFilterProxyModel):
         )
         if self._advanced_query_structure != new_structure:
             logger.debug(
-                f"Updating advanced query structure. Old: {self._advanced_query_structure}, New: {new_structure}"
+                "Updating advanced query structure. Old: %s, New: %s",
+                self._advanced_query_structure,
+                new_structure,
             )
             self._advanced_query_structure = new_structure
             self.invalidateFilter()
@@ -669,12 +681,20 @@ class FileFilterProxyModel(QtCore.QSortFilterProxyModel):
             new_max = float(max_lufs) if max_lufs is not None else None
         except (ValueError, TypeError) as e:
             logger.error(
-                f"Invalid type received in set_filter_lufs_range: min='{min_lufs}', max='{max_lufs}'. Error: {e}"
+                "Invalid type received in set_filter_lufs_range: "
+                "min=%r, max=%r. Error: %s",
+                min_lufs,
+                max_lufs,
+                e,
             )
             new_min, new_max = None, None
         if self._filter_lufs_min != new_min or self._filter_lufs_max != new_max:
             logger.debug(
-                f"LUFS filter state changing from ({self._filter_lufs_min}, {self._filter_lufs_max}) to ({new_min}, {new_max})"
+                "LUFS filter state changing from (%s, %s) to (%s, %s)",
+                self._filter_lufs_min,
+                self._filter_lufs_max,
+                new_min,
+                new_max,
             )
             self._filter_lufs_min = new_min
             self._filter_lufs_max = new_max
@@ -682,12 +702,16 @@ class FileFilterProxyModel(QtCore.QSortFilterProxyModel):
             self.invalidateFilter()
         else:
             logger.debug(
-                "set_filter_lufs_range called but new values match existing state. No invalidation needed."
+                "set_filter_lufs_range called with unchanged values; "
+                "no invalidation needed."
             )
 
     def set_filter_bit_depth(self, bit_depth: Optional[int]) -> None:
         try:
-            val = int(bit_depth) if bit_depth not in (None, "", "Any", 0) else None  # type: ignore[arg-type]
+            if bit_depth in (None, "", "Any", 0):
+                val = None
+            else:
+                val = int(bit_depth)  # type: ignore[arg-type]
         except (TypeError, ValueError):
             val = None
         if self._filter_bit_depth != val:
@@ -702,7 +726,7 @@ class FileFilterProxyModel(QtCore.QSortFilterProxyModel):
         new_max = float(max_hz) if max_hz else None
         if (new_min, new_max) != (self._filter_pitch_hz_min, self._filter_pitch_hz_max):
             self._filter_pitch_hz_min, self._filter_pitch_hz_max = new_min, new_max
-            logger.debug("Setting pitch-Hz range: %s – %s", new_min, new_max)
+            logger.debug("Setting pitch-Hz range: %s - %s", new_min, new_max)
             self.invalidateFilter()
 
     def set_filter_attack_time_range(
@@ -718,7 +742,7 @@ class FileFilterProxyModel(QtCore.QSortFilterProxyModel):
                 new_min,
                 new_max,
             )
-            logger.debug("Setting attack-time range: %s – %s", new_min, new_max)
+            logger.debug("Setting attack-time range: %s - %s", new_min, new_max)
             self.invalidateFilter()
 
     # --- Helper for Advanced Query Evaluation ---
@@ -748,16 +772,16 @@ class FileFilterProxyModel(QtCore.QSortFilterProxyModel):
                         if isinstance(tag_list, list):
                             if any(term in str(tag).lower() for tag in tag_list):
                                 match_found = True
-                                break  # Found in tags, no need to check other tag dimensions
+                                break
                     if match_found:
-                        break  # Found in tags, no need to check other fields for this condition
-                continue  # Skip to next field if tags aren't a dict or no match found
+                        break
+                continue
 
             # Perform check if target_text was determined
             if target_text is not None:
                 if term in target_text:
                     match_found = True
-                    break  # Found in this field, no need to check others for this condition
+                    break
 
         # Apply negation
         return not match_found if negated else match_found
@@ -773,8 +797,7 @@ class FileFilterProxyModel(QtCore.QSortFilterProxyModel):
         model = self.sourceModel()
         # Ensure the source model is the correct type
         if not isinstance(model, FileTableModel):
-            # If source model isn't set or is wrong type, accept row by default? Or reject?
-            # Accepting seems safer, but depends on desired behavior if model is invalid.
+            # Accept rows when the proxy is temporarily missing a valid source.
             logger.warning("FilterProxyModel source model not set or incorrect type.")
             return True
 
@@ -784,19 +807,17 @@ class FileFilterProxyModel(QtCore.QSortFilterProxyModel):
             logger.debug(f"Filter Reject Row {source_row}: Invalid file_info data.")
             return False  # Reject if data is invalid
 
-        # --- Apply Standard Filters (Excluding simple name filter which is replaced by advanced) ---
+        # --- Apply Standard Filters ---
 
         # 1. Unused Filter
         if self._filter_unused_only and file_info.get("used", False):
-            # logger.debug(f"Filter Reject Row {source_row}: Used filter active and file is used.")
             return False
 
         # 2. Key Filter (Dedicated Combobox)
         if self._filter_key is not None:
             file_key = file_info.get("key", "").strip().upper()
-            # Reject if key doesn't match (case insensitive handled by storing filter key as upper)
+            # Filter key is stored uppercase, so comparison stays case-insensitive.
             if file_key != self._filter_key:
-                # logger.debug(f"Filter Reject Row {source_row}: Key mismatch ('{file_key}' vs '{self._filter_key}')")
                 return False
 
         # 3. BPM Filter
@@ -806,7 +827,6 @@ class FileFilterProxyModel(QtCore.QSortFilterProxyModel):
         if filter_bpm_active:
             file_bpm = file_info.get("bpm")
             if file_bpm is None:
-                # logger.debug(f"Filter Reject Row {source_row}: BPM filter active but file has no BPM.")
                 return False  # Reject if filtering on BPM but file has no BPM
             try:
                 file_bpm_f = float(file_bpm)
@@ -814,23 +834,19 @@ class FileFilterProxyModel(QtCore.QSortFilterProxyModel):
                     self._filter_bpm_min is not None
                     and file_bpm_f < self._filter_bpm_min
                 ):
-                    # logger.debug(f"Filter Reject Row {source_row}: BPM {file_bpm_f} < {self._filter_bpm_min} (Min)")
                     return False
                 if (
                     self._filter_bpm_max is not None
                     and file_bpm_f > self._filter_bpm_max
                 ):
-                    # logger.debug(f"Filter Reject Row {source_row}: BPM {file_bpm_f} > {self._filter_bpm_max} (Max)")
                     return False
             except (ValueError, TypeError):
-                # logger.debug(f"Filter Reject Row {source_row}: Cannot convert file BPM '{file_bpm}' to float.")
                 return False  # Reject if conversion fails when filtering
 
         # 4. Specific Tags Filter (Dictionary - currently unused by UI but logic kept)
         if self._filter_tags_dict:
             file_tags = file_info.get("tags", {})
             if not isinstance(file_tags, dict):
-                # logger.debug(f"Filter Reject Row {source_row}: Specific tag filter active but file tags not a dict.")
                 return False  # Cannot check tags if not a dict
             for req_dim, req_values_list in self._filter_tags_dict.items():
                 file_dim_values_list = file_tags.get(req_dim.lower(), [])
@@ -838,18 +854,16 @@ class FileFilterProxyModel(QtCore.QSortFilterProxyModel):
                 file_dim_values_upper_set = {
                     str(tag).upper().strip() for tag in file_dim_values_list if tag
                 }
-                # Check if all required tag values for this dimension are present in the file's tags
+                # All requested values must be present for this tag dimension.
                 if not all(
                     req_val in file_dim_values_upper_set for req_val in req_values_list
                 ):
-                    # logger.debug(f"Filter Reject Row {source_row}: Missing required tag dimension/value '{req_dim}':'{req_values_list}'")
                     return False
 
         # 5. Simple Tag Text Filter (QLineEdit)
         if self._filter_tag_text is not None:
             file_tags = file_info.get("tags", {})
             if not isinstance(file_tags, dict):
-                # logger.debug(f"Filter Reject Row {source_row}: Tag text filter active but file tags not a dict.")
                 return False  # Cannot check tags if not a dict
             found_match = False
             search_text = self._filter_tag_text  # Already upper case from setter
@@ -861,7 +875,6 @@ class FileFilterProxyModel(QtCore.QSortFilterProxyModel):
                     found_match = True
                     break
             if not found_match:
-                # logger.debug(f"Filter Reject Row {source_row}: Tag text '{search_text}' not found in tags.")
                 return False
 
         # --- Apply NEW Feature Filters ---
@@ -878,17 +891,14 @@ class FileFilterProxyModel(QtCore.QSortFilterProxyModel):
                     self._filter_lufs_min is not None
                     and file_lufs_f < self._filter_lufs_min
                 ):
-                    # logger.debug(f"Filter Reject Row {source_row}: LUFS {file_lufs_f} < {self._filter_lufs_min} (Min)")
                     return False
                 if (
                     self._filter_lufs_max is not None
                     and file_lufs_f > self._filter_lufs_max
                 ):
-                    # logger.debug(f"Filter Reject Row {source_row}: LUFS {file_lufs_f} > {self._filter_lufs_max} (Max)")
                     return False
             except (ValueError, TypeError):
                 # This now catches errors from float(None) or non-numeric values.
-                # logger.debug(f"Filter Reject Row {source_row}: Invalid/missing LUFS value for active filter.")
                 return False  # Reject if filter active and value is None or non-numeric
 
         # 7. Bit Depth Filter
@@ -899,10 +909,8 @@ class FileFilterProxyModel(QtCore.QSortFilterProxyModel):
                 # This int() call will raise TypeError if file_bit_depth is None
                 file_bit_depth_i = int(file_bit_depth)  # type: ignore[arg-type]
                 if file_bit_depth_i != self._filter_bit_depth:
-                    # logger.debug(f"Filter Reject Row {source_row}: Bit depth {file_bit_depth_i} != {self._filter_bit_depth}")
                     return False
             except (ValueError, TypeError):
-                # logger.debug(f"Filter Reject Row {source_row}: Invalid/missing Bit Depth value for active filter.")
                 return False
 
         # 8. Pitch Hz Filter
@@ -919,17 +927,14 @@ class FileFilterProxyModel(QtCore.QSortFilterProxyModel):
                     self._filter_pitch_hz_min is not None
                     and file_pitch_f < self._filter_pitch_hz_min
                 ):
-                    # logger.debug(f"Filter Reject Row {source_row}: Pitch {file_pitch_f} < {self._filter_pitch_hz_min} (Min)")
                     return False
                 # Check Max Boundary
                 if (
                     self._filter_pitch_hz_max is not None
                     and file_pitch_f > self._filter_pitch_hz_max
                 ):
-                    # logger.debug(f"Filter Reject Row {source_row}: Pitch {file_pitch_f} > {self._filter_pitch_hz_max} (Max)")
                     return False
             except (ValueError, TypeError):
-                # logger.debug(f"Filter Reject Row {source_row}: Invalid/missing Pitch value for active filter.")
                 return False
 
         # 9. Attack Time Filter
@@ -946,22 +951,18 @@ class FileFilterProxyModel(QtCore.QSortFilterProxyModel):
                     self._filter_attack_time_min is not None
                     and file_attack_f < self._filter_attack_time_min
                 ):
-                    # logger.debug(f"Filter Reject Row {source_row}: Attack {file_attack_f}s < {self._filter_attack_time_min}s (Min)")
                     return False
                 if (
                     self._filter_attack_time_max is not None
                     and file_attack_f > self._filter_attack_time_max
                 ):
-                    # logger.debug(f"Filter Reject Row {source_row}: Attack {file_attack_f}s > {self._filter_attack_time_max}s (Max)")
                     return False
             except (ValueError, TypeError):
-                # logger.debug(f"Filter Reject Row {source_row}: Cannot convert file attack time '{file_attack}' to float.")
                 return False
 
         # --- Evaluate Advanced Search Query (Boolean/Fielded Text Search) ---
         if self._advanced_query_structure:
             overall_match = True  # Default assumption for first term's context
-            # logger.debug(f"Filter Row {source_row} evaluating advanced query: {self._advanced_query_structure}")
             for i, condition in enumerate(self._advanced_query_structure):
                 # Evaluate the current condition against the file info
                 condition_match = self._check_condition(condition, file_info)
@@ -979,9 +980,8 @@ class FileFilterProxyModel(QtCore.QSortFilterProxyModel):
                 elif op == "OR":
                     # Must match previous OR current
                     overall_match = overall_match or condition_match
-                    # Optimization: If an OR succeeds, can we stop? Only if ORs are grouped and correctly parsed, safer to evaluate all for now.
-            # logger.debug(f"Filter Row {source_row} advanced query result: {overall_match}")
-            # If after evaluating all conditions, the combined result is False, exclude row
+                    # Keep evaluating because OR grouping is not fully parsed.
+            # If the combined result is False, exclude the row.
             if not overall_match:
                 return False
 

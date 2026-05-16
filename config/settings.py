@@ -36,7 +36,8 @@ KEY_REGEX = re.compile(
 
 # --- BPM Detection Regex ---
 BPM_REGEX = re.compile(
-    # Matches common BPM patterns like "120bpm", "120 bpm", "120BPM", or just "120" if it looks like a BPM value
+    # Matches common BPM patterns like "120bpm", "120 bpm", "120BPM",
+    # or just "120" if it looks like a BPM value.
     # Use \b for word boundaries to avoid matching parts of other numbers.
     r"\b(?P<bpm>\d{2,3})\s?(?:bpm|BPM)?\b"
 )
@@ -56,7 +57,9 @@ FILENAME_TAG_PATTERNS: List[Tuple[str, Pattern[str]]] = [
     (
         "instrument",
         re.compile(
-            r"\b(kick|kd|snare|sd|clap|clp|hat|hh|cymbal|cym|tom|bass|sub|synth|lead|pad|pluck|piano|guitar|vocal|vox|fx|riser|impact)\b",
+            r"\b(kick|kd|snare|sd|clap|clp|hat|hh|cymbal|cym|tom|"
+            r"bass|sub|synth|lead|pad|pluck|piano|guitar|vocal|vox|"
+            r"fx|riser|impact)\b",
             re.IGNORECASE,
         ),
     ),
@@ -70,7 +73,8 @@ FILENAME_TAG_PATTERNS: List[Tuple[str, Pattern[str]]] = [
     (
         "character",
         re.compile(
-            r"\b(punchy|heavy|light|dark|ambient|dirty|clean|distorted|short|long|wet|dry|processed|raw)\b",
+            r"\b(punchy|heavy|light|dark|ambient|dirty|clean|distorted|"
+            r"short|long|wet|dry|processed|raw)\b",
             re.IGNORECASE,
         ),
     ),
