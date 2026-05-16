@@ -14,11 +14,8 @@ This roadmap keeps the public direction realistic. Musicians Organizer is a loca
 - Add clearer progress/error feedback for long scans and analysis jobs.
 - Expand tests around duplicate handling, filtering, tagging, and similarity queries.
 - Improve documentation for database path configuration and migration behavior.
-- Continue reducing scoped flake8 lint debt without mixing it into feature changes.
-  The current CI Flake8 step is advisory because the scoped baseline is known and
-  tracked separately, not because lint is optional. Target condition: make the
-  scoped Flake8 check blocking again after the cleanup sequence in
-  [docs/lint-execution-policy.md](docs/lint-execution-policy.md) is complete.
+- Keep the scoped Flake8 check blocking in CI. Expand lint coverage only through
+  dedicated cleanup passes so feature work stays reviewable.
 - Document more manual UI workflows with screenshots where helpful.
 
 ## Packaging And Distribution

@@ -42,15 +42,13 @@ Before opening a pull request, run the same blocking checks used by CI:
 ```bash
 python -m black --check .
 python -m isort --check-only .
+python -m flake8 config services models utils main.py
 python -m mypy .
 python -m pytest -q --maxfail=1 --disable-warnings
 ```
 
-Flake8 currently runs as a non-blocking scoped check while legacy lint debt is reduced:
-
-```bash
-python -m flake8 config services models utils main.py
-```
+Flake8 is currently scoped to maintained core modules. The scoped check is
+blocking in CI.
 
 If your change touches UI behavior, please also describe the manual flow you tested. Screenshots are helpful for visual changes.
 

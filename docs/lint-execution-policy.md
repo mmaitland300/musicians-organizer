@@ -1,12 +1,14 @@
-# Lint Execution Policy (Locked Mode)
+# Lint Execution Policy
 
-This document defines the operating mode for the Flake8 cleanup campaign.
+This document records the operating mode used to close the scoped Flake8
+cleanup campaign and keep the CI gate stable.
 
 ## Policy Verification
 
 - Flake8 source of truth: `.flake8`
 - Black/isort config source of truth: `pyproject.toml`
 - CI flake8 scope: `config services models utils main.py`
+- CI flake8 mode: blocking
 - CI matrix: Python `3.10` and `3.11`
 - Local lint campaign runtime: Python `3.11` via repo-local `.venv`
 
@@ -45,7 +47,7 @@ This document defines the operating mode for the Flake8 cleanup campaign.
 - Handle `config/settings.py` regex edits manually, not mechanically.
 - Keep branch diffs reviewable; split large files into multiple passes as needed.
 
-## Execution Order
+## Completed Execution Order
 
 1. `lint/policy-verify`
 2. `lint/baseline-snapshot`

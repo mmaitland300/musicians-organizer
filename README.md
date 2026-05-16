@@ -30,7 +30,7 @@ and cleaning the library over time.
 - Auto-tagging is heuristic. Similarity quality depends on feature coverage and distribution in the user's own library.
 - "Send to Cubase" is intentionally narrow and should not be read as a general DAW bridge.
 
-For planned cleanup, packaging, and lint work, see [ROADMAP.md](ROADMAP.md).
+For planned cleanup and packaging work, see [ROADMAP.md](ROADMAP.md).
 
 ## Visual Walkthrough
 
@@ -119,16 +119,13 @@ For a fresh local verification baseline, recreate `.venv` before running checks.
 ```bash
 python -m black --check .
 python -m isort --check-only .
+python -m flake8 config services models utils main.py
 python -m mypy .
 python -m pytest -q --maxfail=1 --disable-warnings
 ```
 
-Flake8 currently runs in CI as an advisory (non-blocking) scoped check while
-legacy lint debt is reduced in planned cleanup passes:
-
-```bash
-python -m flake8 config services models utils main.py
-```
+Flake8 is intentionally scoped to maintained core modules for now. That scoped
+check is blocking in CI.
 
 ## Architecture and Runtime Workflow
 
