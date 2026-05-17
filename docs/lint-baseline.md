@@ -1,7 +1,11 @@
-# Flake8 Baseline Snapshot
+# Historical Flake8 Baseline Snapshot
 
-This baseline captures the state of the scoped CI flake8 target before the
-cleanup passes.
+This historical baseline captures the state of the scoped CI Flake8 target
+before the cleanup passes that made the scoped check blocking in CI.
+
+Current policy is recorded in [lint-execution-policy.md](lint-execution-policy.md).
+As of that policy, the scoped command below is expected to pass and CI treats it
+as a required check.
 
 ## Runtime and Policy
 
@@ -34,11 +38,11 @@ cleanup passes.
 9. `services/advanced_analysis_worker.py`: 3
 10. `services/hash_worker.py`: 2
 
-## Notes for Next Branches
+## Historical Cleanup Notes
 
-- Non-`E501` findings are currently zero in the scoped command.
-- Highest-churn files are `services/database_manager.py` and `models/file_model.py`,
-  which is why they are split into dedicated passes.
+- Non-`E501` findings were zero in the scoped command at baseline time.
+- Highest-churn files were `services/database_manager.py` and `models/file_model.py`,
+  which is why they were split into dedicated cleanup passes.
 
 ## Non-E501 Final Pass Check
 
