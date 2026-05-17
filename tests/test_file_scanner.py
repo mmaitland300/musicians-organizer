@@ -1,71 +1,121 @@
-import datetime
-import os
-import tempfile
-import unittest
-from unittest.mock import MagicMock, patch
-
-from PyQt5.QtTest import QSignalSpy
+from pathlib import Path
+from types import SimpleNamespace
+from typing import Any, cast
+from unittest.mock import Mock
 
 from services.database_manager import DatabaseManager
 from services.file_scanner import FileScannerService
 
 
-class TestFileScannerService(unittest.TestCase):
-    def setUp(self):
-        # Create a temporary directory with one dummy file.
-        self.temp_dir = tempfile.TemporaryDirectory()
-        self.test_file_path = os.path.join(self.temp_dir.name, "test_audio.mp3")
-        # Write some dummy data (it need not be valid audio)
-        with open(self.test_file_path, "wb") as f:
-            f.write(b"\x00" * 1024)  # 1KB dummy file.
+class FakeCacheManager:
+    def __init__(self) -> None:
+        self.updated: list[tuple[str, float, int, dict[str, Any]]] = []
+        self.flushed = False
 
-            # Mock DatabaseManager for setUp - tests might need more specific mocks
-            mock_db_manager = MagicMock(spec=DatabaseManager)
-            # Create the scanner, passing the required db_manager (mocked)
-            self.scanner = FileScannerService(
-                root_path=self.temp_dir.name, db_manager=mock_db_manager
-            )
+    def needs_update(self, file_path: str, mod_time: float, size: int) -> bool:
+        return True
 
-    def tearDown(self):
-        self.temp_dir.cleanup()
+    def get(self, file_path: str, mod_time: float, size: int) -> dict[str, Any]:
+        return {}
 
-    @unittest.skip(
-        "Temporarily skipping file scanner test due to hanging metadata extraction"
+    def update(
+        self, file_path: str, mod_time: float, size: int, data: dict[str, Any]
+    ) -> None:
+        self.updated.append((file_path, mod_time, size, data))
+
+    def flush(self) -> None:
+        self.flushed = True
+
+
+class FakeDatabaseManager:
+    def __init__(self, existing_records: list[dict[str, Any]] | None = None) -> None:
+        self.engine = object()
+        self.existing_records = existing_records or []
+        self.folder_queries: list[str] = []
+        self.saved_records: list[dict[str, Any]] = []
+        self.deleted_paths: list[str] = []
+
+    def get_files_in_folder(self, folder_path: str) -> list[dict[str, Any]]:
+        self.folder_queries.append(folder_path)
+        return self.existing_records
+
+    def save_file_records(self, records: list[dict[str, Any]]) -> None:
+        self.saved_records.extend(records)
+
+    def delete_file_record(self, file_path: str) -> None:
+        self.deleted_paths.append(file_path)
+
+
+def test_scan_collects_audio_metadata_and_saves_new_records(
+    tmp_path: Path, monkeypatch
+) -> None:
+    audio_path = tmp_path / "sample.wav"
+    audio_path.write_bytes(b"\x00" * 1024)
+
+    cache = FakeCacheManager()
+    monkeypatch.setattr("services.file_scanner.CacheManager", lambda: cache)
+
+    tag = SimpleNamespace(duration=100.0, samplerate=44100, channels=2)
+    tiny_tag_get = Mock(return_value=tag)
+    monkeypatch.setattr("services.file_scanner.TinyTag.get", tiny_tag_get)
+
+    db = FakeDatabaseManager()
+    scanner = FileScannerService(
+        root_path=str(tmp_path), db_manager=cast(DatabaseManager, db)
     )
-    def test_scan(self):
-        # Create a dummy tag to be returned by TinyTag.get.
-        dummy_tag = MagicMock()
-        dummy_tag.duration = 100.0
-        dummy_tag.samplerate = 44100
-        dummy_tag.channels = 2
 
-        # Patch both the reference in config.settings and in services.file_scanner.
-        with (
-            patch(
-                "config.settings.TinyTag.get", return_value=dummy_tag
-            ) as mock_get_config,
-            patch(
-                "services.file_scanner.TinyTag.get", return_value=dummy_tag
-            ) as mock_get_scanner,
-        ):
+    finished_payloads: list[list[dict[str, Any]]] = []
+    progress_events: list[tuple[int, int]] = []
+    scanner.finished.connect(finished_payloads.append)
+    scanner.progress.connect(
+        lambda current, total: progress_events.append((current, total))
+    )
 
-            # Use QSignalSpy to capture the finished signal.
-            spy = QSignalSpy(self.scanner.finished)
-            self.scanner.start()
+    scanner.run()
 
-            # Wait up to 2 seconds for the finished signal.
-            if not spy.wait(2000):
-                self.fail("Finished signal was not emitted in time")
-            files_info = spy[0][0]
-            self.assertTrue(
-                len(files_info) > 0, f"Expected non-empty file info, got: {files_info}"
-            )
-            file_info = files_info[0]
-            self.assertEqual(file_info.get("duration"), 100.0)
-            self.assertEqual(file_info.get("samplerate"), 44100)
-            self.assertEqual(file_info.get("channels"), 2)
-            self.assertIn("path", file_info)
+    assert len(finished_payloads) == 1
+    files_info = finished_payloads[0]
+    assert len(files_info) == 1
+
+    file_info = files_info[0]
+    assert file_info["path"] == str(audio_path)
+    assert file_info["size"] == 1024
+    assert file_info["duration"] == 100.0
+    assert file_info["samplerate"] == 44100
+    assert file_info["channels"] == 2
+    assert file_info["tags"] == {"filetype": [".wav"]}
+
+    assert db.folder_queries == [str(tmp_path)]
+    assert db.saved_records == files_info
+    assert db.deleted_paths == []
+    assert cache.flushed is True
+    assert len(cache.updated) == 1
+    assert progress_events[-1] == (1, 1)
+    tiny_tag_get.assert_called_once_with(str(audio_path))
 
 
-if __name__ == "__main__":
-    unittest.main()
+def test_scan_deletes_database_records_missing_from_folder(
+    tmp_path: Path, monkeypatch
+) -> None:
+    live_path = tmp_path / "live.wav"
+    live_path.write_bytes(b"\x00" * 32)
+    orphan_path = str(tmp_path / "removed.wav")
+
+    cache = FakeCacheManager()
+    monkeypatch.setattr("services.file_scanner.CacheManager", lambda: cache)
+
+    monkeypatch.setattr(
+        "services.file_scanner.TinyTag.get",
+        Mock(
+            return_value=SimpleNamespace(duration=None, samplerate=None, channels=None)
+        ),
+    )
+
+    db = FakeDatabaseManager(existing_records=[{"path": orphan_path}])
+    scanner = FileScannerService(
+        root_path=str(tmp_path), db_manager=cast(DatabaseManager, db)
+    )
+
+    scanner.run()
+
+    assert db.deleted_paths == [orphan_path]
