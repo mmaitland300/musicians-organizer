@@ -1,7 +1,7 @@
-# Workflow Walkthrough Artifact
+# Workflow Walkthrough
 
-This artifact documents one realistic end-to-end workflow so a reviewer can
-quickly see how the application is intended to be used in practice.
+This walkthrough documents one realistic end-to-end workflow so someone trying
+the app can quickly see how it is intended to be used in practice.
 
 ## Scenario
 
