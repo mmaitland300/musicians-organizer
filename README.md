@@ -8,7 +8,7 @@ This project exists because once a sample library grows, folder names alone stop
 being enough. You need a repeatable workflow for finding files, tracking metadata,
 and cleaning the library over time.
 
-## Quick Review Path
+## Start here
 
 - Start with the [Visual Walkthrough](#visual-walkthrough) for the current UI.
 - Run the app with the [Quick Start](#quick-start-deterministic-path) if you have Python 3.11 available.
@@ -20,7 +20,6 @@ and cleaning the library over time.
 - Local-first desktop app for music producers and sound designers with large sample libraries.
 - SQLite-backed file library with scanning, filtering, tagging, duplicate review, and feature inspection.
 - Practical alternative to cloud cataloging when the media files should stay on your machine.
-- Python/PyQt project with desktop-tooling tradeoffs, not a packaged consumer release yet.
 
 ## Status Snapshot
 
@@ -155,6 +154,7 @@ Main runtime path:
 
 ## Tradeoffs and Limitations
 
+- **Packaging:** This is a Python/PyQt desktop project, not a packaged consumer release yet.
 - **Operational cost:** Advanced analysis is CPU-heavy on large libraries.
 - **Dependency constraints:** Audio + plotting stacks can be sensitive to OS
   and local media backend differences.
